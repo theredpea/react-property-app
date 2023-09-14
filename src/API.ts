@@ -3,19 +3,34 @@
 //  This file was automatically generated and should not be edited.
 
 export type CreatePropertyInput = {
-  type: string,
+  type: PropertyType,
   address: string,
   description?: string | null,
   id?: string | null,
+  ownerPropertiesId?: string | null,
 };
 
+export enum PropertyType {
+  HOUSE = "HOUSE",
+  APARTMENT = "APARTMENT",
+  CABIN = "CABIN",
+  CAMPER = "CAMPER",
+}
+
+
 export type ModelPropertyConditionInput = {
-  type?: ModelStringInput | null,
+  type?: ModelPropertyTypeInput | null,
   address?: ModelStringInput | null,
   description?: ModelStringInput | null,
   and?: Array< ModelPropertyConditionInput | null > | null,
   or?: Array< ModelPropertyConditionInput | null > | null,
   not?: ModelPropertyConditionInput | null,
+  ownerPropertiesId?: ModelIDInput | null,
+};
+
+export type ModelPropertyTypeInput = {
+  eq?: PropertyType | null,
+  ne?: PropertyType | null,
 };
 
 export type ModelStringInput = {
@@ -58,16 +73,35 @@ export type ModelSizeInput = {
   between?: Array< number | null > | null,
 };
 
+export type ModelIDInput = {
+  ne?: string | null,
+  eq?: string | null,
+  le?: string | null,
+  lt?: string | null,
+  ge?: string | null,
+  gt?: string | null,
+  contains?: string | null,
+  notContains?: string | null,
+  between?: Array< string | null > | null,
+  beginsWith?: string | null,
+  attributeExists?: boolean | null,
+  attributeType?: ModelAttributeTypes | null,
+  size?: ModelSizeInput | null,
+};
+
 export type Property = {
   __typename: "Property",
-  type: string,
+  type: PropertyType,
   address: string,
+  // > I want to be able to describe the property in some level detail (don't worry about photos for now)
   description?: string | null,
   rooms?: ModelRoomConnection | null,
   features?: ModelFeatureConnection | null,
+  owner: Owner,
   id: string,
   createdAt: string,
   updatedAt: string,
+  ownerPropertiesId?: string | null,
 };
 
 export type ModelRoomConnection = {
@@ -120,14 +154,59 @@ export enum FeatureType {
 }
 
 
+export type Owner = {
+  __typename: "Owner",
+  name: string,
+  email: string,
+  phone: string,
+  properties?: ModelPropertyConnection | null,
+  id: string,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type ModelPropertyConnection = {
+  __typename: "ModelPropertyConnection",
+  items:  Array<Property | null >,
+  nextToken?: string | null,
+};
+
 export type UpdatePropertyInput = {
-  type?: string | null,
+  type?: PropertyType | null,
   address?: string | null,
   description?: string | null,
   id: string,
+  ownerPropertiesId?: string | null,
 };
 
 export type DeletePropertyInput = {
+  id: string,
+};
+
+export type CreateOwnerInput = {
+  name: string,
+  email: string,
+  phone: string,
+  id?: string | null,
+};
+
+export type ModelOwnerConditionInput = {
+  name?: ModelStringInput | null,
+  email?: ModelStringInput | null,
+  phone?: ModelStringInput | null,
+  and?: Array< ModelOwnerConditionInput | null > | null,
+  or?: Array< ModelOwnerConditionInput | null > | null,
+  not?: ModelOwnerConditionInput | null,
+};
+
+export type UpdateOwnerInput = {
+  name?: string | null,
+  email?: string | null,
+  phone?: string | null,
+  id: string,
+};
+
+export type DeleteOwnerInput = {
   id: string,
 };
 
@@ -150,22 +229,6 @@ export type ModelRoomConditionInput = {
 export type ModelRoomTypeInput = {
   eq?: RoomType | null,
   ne?: RoomType | null,
-};
-
-export type ModelIDInput = {
-  ne?: string | null,
-  eq?: string | null,
-  le?: string | null,
-  lt?: string | null,
-  ge?: string | null,
-  gt?: string | null,
-  contains?: string | null,
-  notContains?: string | null,
-  between?: Array< string | null > | null,
-  beginsWith?: string | null,
-  attributeExists?: boolean | null,
-  attributeType?: ModelAttributeTypes | null,
-  size?: ModelSizeInput | null,
 };
 
 export type UpdateRoomInput = {
@@ -212,17 +275,27 @@ export type DeleteFeatureInput = {
 };
 
 export type ModelPropertyFilterInput = {
-  type?: ModelStringInput | null,
+  type?: ModelPropertyTypeInput | null,
   address?: ModelStringInput | null,
   description?: ModelStringInput | null,
   and?: Array< ModelPropertyFilterInput | null > | null,
   or?: Array< ModelPropertyFilterInput | null > | null,
   not?: ModelPropertyFilterInput | null,
+  ownerPropertiesId?: ModelIDInput | null,
 };
 
-export type ModelPropertyConnection = {
-  __typename: "ModelPropertyConnection",
-  items:  Array<Property | null >,
+export type ModelOwnerFilterInput = {
+  name?: ModelStringInput | null,
+  email?: ModelStringInput | null,
+  phone?: ModelStringInput | null,
+  and?: Array< ModelOwnerFilterInput | null > | null,
+  or?: Array< ModelOwnerFilterInput | null > | null,
+  not?: ModelOwnerFilterInput | null,
+};
+
+export type ModelOwnerConnection = {
+  __typename: "ModelOwnerConnection",
+  items:  Array<Owner | null >,
   nextToken?: string | null,
 };
 
@@ -267,6 +340,14 @@ export type ModelSubscriptionStringInput = {
   notIn?: Array< string | null > | null,
 };
 
+export type ModelSubscriptionOwnerFilterInput = {
+  name?: ModelSubscriptionStringInput | null,
+  email?: ModelSubscriptionStringInput | null,
+  phone?: ModelSubscriptionStringInput | null,
+  and?: Array< ModelSubscriptionOwnerFilterInput | null > | null,
+  or?: Array< ModelSubscriptionOwnerFilterInput | null > | null,
+};
+
 export type ModelSubscriptionRoomFilterInput = {
   type?: ModelSubscriptionStringInput | null,
   description?: ModelSubscriptionStringInput | null,
@@ -289,8 +370,9 @@ export type CreatePropertyMutationVariables = {
 export type CreatePropertyMutation = {
   createProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -318,9 +400,23 @@ export type CreatePropertyMutation = {
       } | null >,
       nextToken?: string | null,
     } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
     id: string,
     createdAt: string,
     updatedAt: string,
+    ownerPropertiesId?: string | null,
   } | null,
 };
 
@@ -332,8 +428,9 @@ export type UpdatePropertyMutationVariables = {
 export type UpdatePropertyMutation = {
   updateProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -361,9 +458,23 @@ export type UpdatePropertyMutation = {
       } | null >,
       nextToken?: string | null,
     } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
     id: string,
     createdAt: string,
     updatedAt: string,
+    ownerPropertiesId?: string | null,
   } | null,
 };
 
@@ -375,8 +486,9 @@ export type DeletePropertyMutationVariables = {
 export type DeletePropertyMutation = {
   deleteProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -401,6 +513,116 @@ export type DeletePropertyMutation = {
         createdAt: string,
         updatedAt: string,
         propertyFeaturesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+    ownerPropertiesId?: string | null,
+  } | null,
+};
+
+export type CreateOwnerMutationVariables = {
+  input: CreateOwnerInput,
+  condition?: ModelOwnerConditionInput | null,
+};
+
+export type CreateOwnerMutation = {
+  createOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdateOwnerMutationVariables = {
+  input: UpdateOwnerInput,
+  condition?: ModelOwnerConditionInput | null,
+};
+
+export type UpdateOwnerMutation = {
+  updateOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeleteOwnerMutationVariables = {
+  input: DeleteOwnerInput,
+  condition?: ModelOwnerConditionInput | null,
+};
+
+export type DeleteOwnerMutation = {
+  deleteOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -519,8 +741,9 @@ export type GetPropertyQueryVariables = {
 export type GetPropertyQuery = {
   getProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -548,9 +771,23 @@ export type GetPropertyQuery = {
       } | null >,
       nextToken?: string | null,
     } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
     id: string,
     createdAt: string,
     updatedAt: string,
+    ownerPropertiesId?: string | null,
   } | null,
 };
 
@@ -565,8 +802,9 @@ export type ListPropertiesQuery = {
     __typename: "ModelPropertyConnection",
     items:  Array< {
       __typename: "Property",
-      type: string,
+      type: PropertyType,
       address: string,
+      // > I want to be able to describe the property in some level detail (don't worry about photos for now)
       description?: string | null,
       rooms?:  {
         __typename: "ModelRoomConnection",
@@ -574,6 +812,73 @@ export type ListPropertiesQuery = {
       } | null,
       features?:  {
         __typename: "ModelFeatureConnection",
+        nextToken?: string | null,
+      } | null,
+      owner:  {
+        __typename: "Owner",
+        name: string,
+        email: string,
+        phone: string,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+      },
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+      ownerPropertiesId?: string | null,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type GetOwnerQueryVariables = {
+  id: string,
+};
+
+export type GetOwnerQuery = {
+  getOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListOwnersQueryVariables = {
+  filter?: ModelOwnerFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListOwnersQuery = {
+  listOwners?:  {
+    __typename: "ModelOwnerConnection",
+    items:  Array< {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
         nextToken?: string | null,
       } | null,
       id: string,
@@ -667,8 +972,9 @@ export type OnCreatePropertySubscriptionVariables = {
 export type OnCreatePropertySubscription = {
   onCreateProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -696,9 +1002,23 @@ export type OnCreatePropertySubscription = {
       } | null >,
       nextToken?: string | null,
     } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
     id: string,
     createdAt: string,
     updatedAt: string,
+    ownerPropertiesId?: string | null,
   } | null,
 };
 
@@ -709,8 +1029,9 @@ export type OnUpdatePropertySubscriptionVariables = {
 export type OnUpdatePropertySubscription = {
   onUpdateProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -738,9 +1059,23 @@ export type OnUpdatePropertySubscription = {
       } | null >,
       nextToken?: string | null,
     } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
     id: string,
     createdAt: string,
     updatedAt: string,
+    ownerPropertiesId?: string | null,
   } | null,
 };
 
@@ -751,8 +1086,9 @@ export type OnDeletePropertySubscriptionVariables = {
 export type OnDeletePropertySubscription = {
   onDeleteProperty?:  {
     __typename: "Property",
-    type: string,
+    type: PropertyType,
     address: string,
+    // > I want to be able to describe the property in some level detail (don't worry about photos for now)
     description?: string | null,
     rooms?:  {
       __typename: "ModelRoomConnection",
@@ -777,6 +1113,113 @@ export type OnDeletePropertySubscription = {
         createdAt: string,
         updatedAt: string,
         propertyFeaturesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    owner:  {
+      __typename: "Owner",
+      name: string,
+      email: string,
+      phone: string,
+      properties?:  {
+        __typename: "ModelPropertyConnection",
+        nextToken?: string | null,
+      } | null,
+      id: string,
+      createdAt: string,
+      updatedAt: string,
+    },
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+    ownerPropertiesId?: string | null,
+  } | null,
+};
+
+export type OnCreateOwnerSubscriptionVariables = {
+  filter?: ModelSubscriptionOwnerFilterInput | null,
+};
+
+export type OnCreateOwnerSubscription = {
+  onCreateOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdateOwnerSubscriptionVariables = {
+  filter?: ModelSubscriptionOwnerFilterInput | null,
+};
+
+export type OnUpdateOwnerSubscription = {
+  onUpdateOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    id: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeleteOwnerSubscriptionVariables = {
+  filter?: ModelSubscriptionOwnerFilterInput | null,
+};
+
+export type OnDeleteOwnerSubscription = {
+  onDeleteOwner?:  {
+    __typename: "Owner",
+    name: string,
+    email: string,
+    phone: string,
+    properties?:  {
+      __typename: "ModelPropertyConnection",
+      items:  Array< {
+        __typename: "Property",
+        type: PropertyType,
+        address: string,
+        // > I want to be able to describe the property in some level detail (don't worry about photos for now)
+        description?: string | null,
+        id: string,
+        createdAt: string,
+        updatedAt: string,
+        ownerPropertiesId?: string | null,
       } | null >,
       nextToken?: string | null,
     } | null,

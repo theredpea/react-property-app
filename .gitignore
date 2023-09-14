@@ -43,3 +43,7 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# Hide resolvers for now; extra bloat
+# Can always unhide later; unhiding later easier than hiding later
+resolvers/

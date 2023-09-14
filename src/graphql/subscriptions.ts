@@ -34,9 +34,23 @@ export const onCreateProperty = /* GraphQL */ `
         nextToken
         __typename
       }
+      owner {
+        name
+        email
+        phone
+        properties {
+          nextToken
+          __typename
+        }
+        id
+        createdAt
+        updatedAt
+        __typename
+      }
       id
       createdAt
       updatedAt
+      ownerPropertiesId
       __typename
     }
   }
@@ -73,9 +87,23 @@ export const onUpdateProperty = /* GraphQL */ `
         nextToken
         __typename
       }
+      owner {
+        name
+        email
+        phone
+        properties {
+          nextToken
+          __typename
+        }
+        id
+        createdAt
+        updatedAt
+        __typename
+      }
       id
       createdAt
       updatedAt
+      ownerPropertiesId
       __typename
     }
   }
@@ -107,6 +135,101 @@ export const onDeleteProperty = /* GraphQL */ `
           createdAt
           updatedAt
           propertyFeaturesId
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      owner {
+        name
+        email
+        phone
+        properties {
+          nextToken
+          __typename
+        }
+        id
+        createdAt
+        updatedAt
+        __typename
+      }
+      id
+      createdAt
+      updatedAt
+      ownerPropertiesId
+      __typename
+    }
+  }
+`;
+export const onCreateOwner = /* GraphQL */ `
+  subscription OnCreateOwner($filter: ModelSubscriptionOwnerFilterInput) {
+    onCreateOwner(filter: $filter) {
+      name
+      email
+      phone
+      properties {
+        items {
+          type
+          address
+          description
+          id
+          createdAt
+          updatedAt
+          ownerPropertiesId
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      id
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateOwner = /* GraphQL */ `
+  subscription OnUpdateOwner($filter: ModelSubscriptionOwnerFilterInput) {
+    onUpdateOwner(filter: $filter) {
+      name
+      email
+      phone
+      properties {
+        items {
+          type
+          address
+          description
+          id
+          createdAt
+          updatedAt
+          ownerPropertiesId
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      id
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteOwner = /* GraphQL */ `
+  subscription OnDeleteOwner($filter: ModelSubscriptionOwnerFilterInput) {
+    onDeleteOwner(filter: $filter) {
+      name
+      email
+      phone
+      properties {
+        items {
+          type
+          address
+          description
+          id
+          createdAt
+          updatedAt
+          ownerPropertiesId
           __typename
         }
         nextToken

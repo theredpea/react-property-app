@@ -34,9 +34,23 @@ export const getProperty = /* GraphQL */ `
         nextToken
         __typename
       }
+      owner {
+        name
+        email
+        phone
+        properties {
+          nextToken
+          __typename
+        }
+        id
+        createdAt
+        updatedAt
+        __typename
+      }
       id
       createdAt
       updatedAt
+      ownerPropertiesId
       __typename
     }
   }
@@ -57,6 +71,68 @@ export const listProperties = /* GraphQL */ `
           __typename
         }
         features {
+          nextToken
+          __typename
+        }
+        owner {
+          name
+          email
+          phone
+          id
+          createdAt
+          updatedAt
+          __typename
+        }
+        id
+        createdAt
+        updatedAt
+        ownerPropertiesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getOwner = /* GraphQL */ `
+  query GetOwner($id: ID!) {
+    getOwner(id: $id) {
+      name
+      email
+      phone
+      properties {
+        items {
+          type
+          address
+          description
+          id
+          createdAt
+          updatedAt
+          ownerPropertiesId
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      id
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listOwners = /* GraphQL */ `
+  query ListOwners(
+    $filter: ModelOwnerFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listOwners(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        name
+        email
+        phone
+        properties {
           nextToken
           __typename
         }

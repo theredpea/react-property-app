@@ -9,6 +9,16 @@ input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONL
 # How to address:
 # > As an Evolve agent - I want to be able to fetch and review a property listing
 
+
+# > I want to be able to add 1+ rooms to my property (eg: Living Room, Bedroom 1, etc.)
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  CABIN
+  CAMPER
+}
+
+
 """
  > I want to create a new property listing on this product
 """
@@ -18,7 +28,7 @@ type Property @model {
   # https://docs.amplify.aws/cli/graphql/data-modeling/#configure-a-primary-key ".
   # id: ID!
 
-  type: String!
+  type: PropertyType!
   address: String!
     
   """ 
@@ -45,8 +55,23 @@ type Property @model {
   """
   features: [Feature!] @hasMany
 
+  # Could eventually do @hasMany
+  # And could do many-to-many via joining Model 
+  # https://docs.amplify.aws/cli-legacy/graphql-transformer/connection/#many-to-many-connections
+  owner: Owner! @belongsTo
+
 }
 
+
+type Owner @model {
+  # As a vacation property owner that wants to have Evolve manage my property -
+  name: String!
+  email: String!
+  phone: String!
+
+  properties: [Property!] @hasMany
+
+}
 
 # > I want to be able to add 1+ rooms to my property (eg: Living Room, Bedroom 1, etc.)
 enum RoomType {
@@ -54,8 +79,6 @@ enum RoomType {
   BATHROOM
   KITCHEN
   LIVING_ROOM
-
-
 }
 
 type Room @model {
