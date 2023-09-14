@@ -2,53 +2,46 @@
 # all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
 input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
 
+
+# Let's skip auth for now, could identify as an area for improvement 
+# @auth ...
+# https://docs.amplify.aws/cli/graphql/authorization-rules/#public-data-access
+# How to address:
+# > As an Evolve agent - I want to be able to fetch and review a property listing
+
 """
-Let's skip auth for now, could identify as an area for improvement 
-@auth ...
-https://docs.amplify.aws/cli/graphql/authorization-rules/#public-data-access
-How to address:
-> As an Evolve agent - I want to be able to fetch and review a property listing
+ > I want to create a new property listing on this product
 """
 type Property @model {
-  """
-  > I want to create a new property listing on this product
-  """
-
-  """ 
-  > Every GraphQL type with the @model directive will automatically have an id field set as the primary key.
-  https://docs.amplify.aws/cli/graphql/data-modeling/#configure-a-primary-key 
-  
-  🛑 Syntax Error: Expected Name, found BlockString "> Every GraphQL type with the @model directive will automatically have an id field set as the primary key.
-  https://docs.amplify.aws/cli/graphql/data-modeling/#configure-a-primary-key ".
-  """
+     
+  # 🛑 Syntax Error: Expected Name, found BlockString "> Every GraphQL type with the @model directive will automatically have an id field set as the primary key.
+  # https://docs.amplify.aws/cli/graphql/data-modeling/#configure-a-primary-key ".
   # id: ID!
 
   type: String!
   address: String!
-  """
-  > I want to be able to describe the property in some level detail (don't worry about photos for now)
-  """
-  description: String
+    
+  """ 
+   > I want to be able to describe the property in some level detail (don't worry about photos for now)
+  """ 
+ description: String
 
+    
+  # Could use this approach:
+  # bedrooms: Int!
+  # bathrooms: Int!
   """
   > I want to be able to add 1+ rooms to my property (eg: Living Room, Bedroom 1, etc.)
-  ---
-  > 1) Could use this approach:
-  bedrooms: Int!
-  bathrooms: Int!
-  > 2) Or the GraphQL, and the attribute
-  rooms: [Room!]! @hasMany
   """
   rooms: [Room!]! @hasMany
+    
 
+    
+  # Could use this approach:
+  # wifi: Boolean!
+  # parking: Boolean!
   """
   > I want to be able to add specific and multiple amenties to my property (eg: parking, hot tub, Wifi etc.)
-  ---
-  > 1) Could use this approach:
-  wifi: Boolean!
-  parking: Boolean!
-  > 2) Or GraphQL
-  features: [Feature!] @hasMany
   """
   features: [Feature!] @hasMany
 
