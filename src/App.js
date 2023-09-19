@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Amplify, API, graphqlOperation } from 'aws-amplify'
-import logo from './logo.svg';
 import './App.css';
 
 // https://stackoverflow.com/a/43596713/1175496
 // https://stackoverflow.com/a/59268871/1175496
-import { createOwner, createProperty } from './graphql/mutations.ts'
-import { listProperties } from './graphql/queries.ts'
+import { createOwner, createProperty, createFeature, createRoom } from './graphql/mutations.ts'
+import { listProperties, listOwners } from './graphql/queries.ts'
 import { GraphQLResult } from "@aws-amplify/api/lib/types"
 
 
@@ -36,27 +35,22 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
+import CloseIcon from '@mui/icons-material/Close';
 import InputLabel from '@mui/material/InputLabel';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+
 import { PropertyType, FeatureType, RoomType } from './API.ts';
-// import { Property } from './API';
 
-// let's use CDN instead
-// import '@fontsource/roboto/300.css';
-// import '@fontsource/roboto/400.css';
-// import '@fontsource/roboto/500.css';
-// import '@fontsource/roboto/700.css';
-
-const theme = {
-  spacing: 8,
-}
 
 Amplify.configure(awsExports)
 
@@ -76,14 +70,19 @@ let roomId = 1;
 
 function App() {
 
+  const [createSnackbarOpen, setCreateSnackbarOpen] = useState(false)
+
+  const closeCreateSnackbar = (event) => setCreateSnackbarOpen(false)
   const [propertyFormState, setPropertyFormState] = useState(initialPropertyState)
   // alert(propertyFormState.address);
   // https://stackoverflow.com/a/39672914/1175496
   // const [properties, setProperties]: [Property[], Function] = useState([])
   const [properties, setProperties] = useState([])
+  const [owner, setOwner] = useState({})
 
   useEffect(() => {
     fetchProperties()
+    fetchOwner()
   }, [])
 
   function setPropertyInput(key, value) {
@@ -118,6 +117,25 @@ function App() {
       })
     )
   }
+
+  async function fetchOwner() {
+
+    const ownersData = await API.graphql(graphqlOperation(listOwners))
+    let [owner] = ownersData.data.listOwners.items
+
+    if (!owner) {
+      const ownerData = await API.graphql(graphqlOperation(createOwner, {
+        input: {
+          name: 'Nate Anderson',
+          email: 'nate.muir.anderson@gmail.com',
+          phone: '213-814-8942'
+        }
+      }))
+      owner = ownerData.data.createOwner
+    }
+    setOwner(owner)
+  }
+
   async function fetchProperties() {
     try {
       // const propertyData: GraphQLResult<any> = await API.graphql(graphqlOperation(listProperties))
@@ -127,6 +145,58 @@ function App() {
     } catch (e) {
       console.error('error fetching properties')
       console.error(e)
+    }
+  }
+
+  async function handleCreateProperty() {
+    try {
+      // first create or get owner
+      // let owner = undefined
+
+      // then create property
+
+      const propertyData = await API.graphql(graphqlOperation(createProperty, {
+        input: {
+          type: propertyFormState.type,
+          address: propertyFormState.address,
+          description: propertyFormState.description,
+          ownerPropertiesId: owner.id
+        }
+      }))
+      const property = propertyData.data.createProperty;
+
+      // console.error(property)
+      // then create rooms, and features
+      // const rooms = 
+      await Promise.all(propertyFormState.rooms.map(room => (API.graphql(graphqlOperation(createRoom, {
+        input: {
+          type: room.type,
+          description: room.description,
+          propertyRoomsId: property.id,
+        }
+      })))))
+
+      // const features = 
+      await Promise.all(Object.entries(propertyFormState.features)
+        .filter(([feature, isHasFeature]) => isHasFeature)
+        .map(([feature, isHasFeature]) => (API.graphql(graphqlOperation(createFeature, {
+          input: {
+            type: feature,//.type,
+            // description: room.description,
+            propertyFeaturesId: property.id,
+          }
+        })))))
+
+
+      // console.error(rooms, features)
+
+      setPropertyFormState(initialPropertyState)
+      setCreateSnackbarOpen(true)
+      setActiveStep(0)
+      await fetchProperties()
+
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -185,17 +255,20 @@ function App() {
     setActiveStep(step);
   };
 
-  const handleComplete = () => {
-    const newCompleted = completed;
-    newCompleted[activeStep] = true;
-    setCompleted(newCompleted);
-    handleNext();
-  };
+  // const handleComplete = () => {
+  //   const newCompleted = completed;
+  //   newCompleted[activeStep] = true;
+  //   setCompleted(newCompleted);
+  //   handleNext();
+  // };
 
-  const handleReset = () => {
-    setActiveStep(0);
-    setCompleted({});
-  };
+  // const handleReset = () => {
+  //   setActiveStep(0);
+  //   setCompleted({});
+  // };
+
+
+
 
   // https://stackoverflow.com/a/48991708/1175496
   const getStepContent = (step) => {
@@ -297,7 +370,7 @@ function App() {
         return (
           <React.Fragment>
             {propertyFormState.rooms.map(room => (
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+              <Stack direction="row" key={room.id} spacing={1} sx={{ mb: 2 }}>
                 <FormControl sx={{ ...formControlStyle, minWidth: '100px' }} >
                   <InputLabel id="roomType-label-label">Type</InputLabel>
                   <Select
@@ -352,6 +425,15 @@ function App() {
 
     <div className="App">
 
+      <Snackbar
+        open={createSnackbarOpen}
+        autoHideDuration={6000}
+        onClose={closeCreateSnackbar}
+      >
+        <Alert onClose={closeCreateSnackbar} severity="success" sx={{ width: '100%' }}>
+          Property created
+        </Alert>
+      </Snackbar>
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
           <Toolbar>
@@ -367,6 +449,7 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Add a Property
             </Typography>
+            { owner.name }
             {/* <Button color="inherit">Login</Button> */}
           </Toolbar>
         </AppBar>
@@ -391,10 +474,11 @@ function App() {
                   <div>
                     <Button
                       variant="contained"
-                      onClick={handleNext}
+                      onClick={index === steps.length - 1 ? handleCreateProperty : handleNext}
                       sx={{ mt: 1, mr: 1 }}
+                      startIcon={index === steps.length - 1 && <AddCircleIcon />}
                     >
-                      {index === steps.length - 1 ? 'Finish' : 'Continue'}
+                      {index === steps.length - 1 ? 'Create Property' : 'Continue'}
                     </Button>
                     <Button
                       disabled={index === 0}
@@ -415,7 +499,6 @@ function App() {
         properties.map((property, index) => (
           <div key={property.id ? property.id : index} >
             <p >{property.address}</p>
-            <p >{property.description}</p>
           </div>
         ))
       }
