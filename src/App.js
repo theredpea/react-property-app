@@ -28,6 +28,24 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 
+import Radio from '@mui/material/Radio';
+import Checkbox from '@mui/material/Checkbox';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import TextField from '@mui/material/TextField';
+import Container from '@mui/material/Container';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+
+import InputLabel from '@mui/material/InputLabel';
+import HomeIcon from '@mui/icons-material/Home';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+import { PropertyType, FeatureType, RoomType } from './API.ts';
 // import { Property } from './API';
 
 // let's use CDN instead
@@ -43,19 +61,23 @@ const theme = {
 Amplify.configure(awsExports)
 
 const initialPropertyState = {
-  // type
-  // address
-  // description
-  // rooms
-  // features
+  // type: '',
+  type: PropertyType.HOUSE,
+  address: '',
+  description: '',
+  features: {},
+  rooms: [],
   // owner
 
 
 };
 
+let roomId = 1;
+
 function App() {
 
   const [propertyFormState, setPropertyFormState] = useState(initialPropertyState)
+  // alert(propertyFormState.address);
   // https://stackoverflow.com/a/39672914/1175496
   // const [properties, setProperties]: [Property[], Function] = useState([])
   const [properties, setProperties] = useState([])
@@ -66,6 +88,35 @@ function App() {
 
   function setPropertyInput(key, value) {
     setPropertyFormState({ ...propertyFormState, [key]: value })
+  }
+
+  const addRoom = (event) => {
+
+    setPropertyInput('rooms',
+      [
+        ...propertyFormState.rooms,
+        {
+          id: roomId++,
+          type: RoomType.BEDROOM
+        }])
+  }
+  const removeRoom = (roomId) => {
+
+    setPropertyInput('rooms',
+      propertyFormState.rooms.filter(room => room.id !== roomId))
+  }
+
+  const handleRoomChange = (roomId, roomKey, roomValue) => {
+
+    setPropertyInput('rooms',
+      propertyFormState.rooms.map(room => {
+        return room.id === roomId ?
+          ({
+            ...room,
+            [roomKey]: roomValue
+          }) : room;
+      })
+    )
   }
   async function fetchProperties() {
     try {
@@ -88,7 +139,8 @@ function App() {
   const steps = [
     STEP_PROPERTY,
     STEP_AMENITIES,
-    STEP_ROOMS];
+    STEP_ROOMS
+  ];
 
   const [activeStep, setActiveStep] = useState(steps.indexOf(STEP_PROPERTY));
   // https://mui.com/material-ui/react-stepper/
@@ -147,24 +199,150 @@ function App() {
 
   // https://stackoverflow.com/a/48991708/1175496
   const getStepContent = (step) => {
+    const formControlStyle = { display: 'block', mb: 2 };
+    const textInputStyle = { width: 1 };
     switch (step) {
       case steps.indexOf(STEP_PROPERTY):
+
         return (
-          <div>
-            Property
-          </div>
+          <React.Fragment>
+            <FormControl sx={formControlStyle}>
+              <FormLabel id="propertyType-Label">Property Type</FormLabel>
+              <RadioGroup
+                row
+                aria-labelledby="propertyType-Label"
+                name="propertyType"
+                onChange={(event) => { setPropertyInput('type', event.target.value) }}
+                value={propertyFormState.type}
+              >
+                {
+                  Object.keys(PropertyType).map(propertType => {
+                    return (
+                      <FormControlLabel
+                        key={propertType}
+                        value={propertType}
+                        control={<Radio />}
+                        // children={<HomeIcon />}
+                        label={propertType} />
+                    )
+                  })
+                }
+              </RadioGroup>
+            </FormControl>
+            <FormControl sx={formControlStyle}>
+              {/* <FormLabel >Property Address</FormLabel> */}
+              {/* react-dom.development.js:86 Warning: A component is changing a controlled input to be uncontrolled. 
+              This is likely caused by the value changing from a defined to undefined, which should not happen. 
+              Decide between using a controlled or uncontrolled input element for the lifetime of the component. More inf */}
+              <TextField sx={textInputStyle}
+                label="Property Address"
+                variant="outlined"
+                value={propertyFormState.address}
+                onChange={(event) => { setPropertyInput('address', event.target.value) }} />
+            </FormControl>
+            <FormControl sx={formControlStyle}>
+              {/* <FormLabel >Property Address</FormLabel> */}
+              <TextField sx={textInputStyle} label="Property Description"
+                multiline
+                rows={4}
+                variant="outlined"
+                value={propertyFormState.description}
+                onChange={(event) => { setPropertyInput('description', event.target.value) }} />
+            </FormControl>
+          </React.Fragment >
         );
+      // maxRows={4}
       case steps.indexOf(STEP_AMENITIES):
         return (
-          <div>
-            Amenities
-          </div>);
+
+          <React.Fragment>
+            <FormControl sx={formControlStyle}>
+              <RadioGroup
+                row
+                defaultValue={FeatureType.WIFI}
+                name="featureType"
+              >
+                {
+                  Object.keys(FeatureType).map(featureType => {
+                    return (
+                      <FormControlLabel
+                        key={featureType}
+                        value={featureType}
+                        control={<Checkbox
+                          checked={(propertyFormState.features[featureType] || false)}
+                          onChange={(event) => {
+                            setPropertyInput('features',
+                              {
+                                ...propertyFormState.features,
+                                // toggle it
+                                [featureType]: !propertyFormState.features[featureType]
+                              })
+                          }} />}
+                        label={featureType} />
+                    )
+                  })
+                }
+              </RadioGroup>
+            </FormControl>
+          </React.Fragment>);
 
       case steps.indexOf(STEP_ROOMS):
+        // const handleChange = () => { }
+        // Line 242:41:  React Hook "React.useState" is called in function "getStepContent" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter.
+        // const [roomType, setRoomType] = React.useState(RoomType.BEDROOM);
+        const handleChange = (event) => {
+          // setRoomType(event.target.value);
+        };
+        // {/* <InputLabel id="demo-simple-select-label">Rooms</InputLabel> */}
         return (
-          <div>
-            Rooms
-          </div>);
+          <React.Fragment>
+            {propertyFormState.rooms.map(room => (
+              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                <FormControl sx={{ ...formControlStyle, minWidth: '100px' }} >
+                  <InputLabel id="roomType-label-label">Type</InputLabel>
+                  <Select
+                    labelId="roomType-label"
+                    value={room.type}
+                    label="Type"
+                    onChange={(event) => handleRoomChange(room.id, 'type', event.target.value)}
+                  >
+                    {
+                      Object.keys(RoomType).map((roomType) => (
+                        <MenuItem
+                          key={roomType}
+                          value={roomType}>
+                          {roomType}
+                        </MenuItem>
+                      ))
+                    }
+                  </Select>
+                </FormControl>
+                <FormControl sx={{ ...formControlStyle, flex: 1 }} >
+                  <TextField sx={textInputStyle}
+                    label="Description"
+                    variant="outlined"
+                    value={room.description}
+                    onChange={(event) => handleRoomChange(room.id, 'description', event.target.value)} />
+                </FormControl>
+                <IconButton aria-label="delete" onClick={(event) => removeRoom(room.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            ))
+            }<Stack
+              direction="row"
+              justifyContent="flex-end">
+              {/* display: 'block', */}
+              <Button
+                variant="contained"
+                onClick={addRoom}
+                sx={{ mt: 1, mr: 1 }}
+                startIcon={<AddIcon />}
+              >
+                Add Room
+              </Button>
+            </Stack>
+          </React.Fragment >);
       default:
         return 'Unknown step';
     }
@@ -187,66 +365,62 @@ function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              News
+              Add a Property
             </Typography>
-            <Button color="inherit">Login</Button>
+            {/* <Button color="inherit">Login</Button> */}
           </Toolbar>
         </AppBar>
       </Box>
 
+      <Container maxWidth="md">
 
-      <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box' }}>
-        <Stepper nonLinear activeStep={activeStep}>
-          <Step completed={completed[STEP_PROPERTY]}>
-            {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
-            <StepButton color="inherit" onClick={handleStep(0)}>
-              {STEP_PROPERTY}
-            </StepButton>
-          </Step>
-          <Step completed={completed[STEP_AMENITIES]}>
-            <StepButton color="inherit" onClick={handleStep(1)}>
-              {STEP_AMENITIES}
-            </StepButton>
-          </Step>
-          <Step completed={completed[STEP_ROOMS]}>
-            <StepButton color="inherit" onClick={handleStep(2)}>
-              {STEP_ROOMS}
-            </StepButton>
-          </Step>
-        </Stepper>
 
-        <Box sx={{ p: 2 }}>
-          {
-            // Populate the content pane based on the active step
-            getStepContent(activeStep)
-          }
-          <Box>
-            <Button
-              disabled={activeStep === 0}
-            >
-              Back
-            </Button>
-            <Button
-              variant="raised"
-              color="primary"
-            >
-              {activeStep === totalSteps() - 1 ? 'Finish' : 'Next'}
-            </Button>
-          </Box>
+        <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box' }}>
+          <Stepper nonLinear activeStep={activeStep} orientation="vertical">
+            {steps.map((step, index) => (
+              <Step
+                key={step}
+                completed={completed[step]}>
+                {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
+                <StepButton color="inherit" onClick={handleStep(steps.indexOf(step))}>
+                  {step}
+                </StepButton>
+                <StepContent>
+                  {getStepContent(steps.indexOf(step))}
+
+                  <div>
+                    <Button
+                      variant="contained"
+                      onClick={handleNext}
+                      sx={{ mt: 1, mr: 1 }}
+                    >
+                      {index === steps.length - 1 ? 'Finish' : 'Continue'}
+                    </Button>
+                    <Button
+                      disabled={index === 0}
+                      onClick={handleBack}
+                      sx={{ mt: 1, mr: 1 }}
+                    >
+                      Back
+                    </Button>
+                  </div>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
         </Box>
 
-      </Box>
-
+      </Container>
       {
         properties.map((property, index) => (
           <div key={property.id ? property.id : index} >
             <p >{property.address}</p>
             <p >{property.description}</p>
-            <Button variant="contained">Hello world</Button>
           </div>
         ))
       }
-    </div>
+
+    </div >
   );
 }
 
