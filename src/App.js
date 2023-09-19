@@ -23,6 +23,8 @@ import Box from '@mui/material/Box';
 
 
 import AppBar from '@mui/material/AppBar';
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -40,17 +42,29 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+// import Drawer from '@mui/material/Drawer';
+import MuiDrawer from '@mui/material/Drawer';
+// import DrawerHeader from '@mui/material/DrawerHeader';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
 import CloseIcon from '@mui/icons-material/Close';
 import InputLabel from '@mui/material/InputLabel';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 
 import { PropertyType, FeatureType, RoomType } from './API.ts';
-
+import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
+// import { styled, createTheme, ThemeProvider } from '@mui/system';
 
 Amplify.configure(awsExports)
 
@@ -70,6 +84,15 @@ let roomId = 1;
 
 function App() {
 
+  // const drawerZ
+  const drawerWidth = 240;
+
+  const [drawerOpen, setDrawerOpen] = useState(true)
+  const handleDrawerClose = () => setDrawerOpen(false)
+  const handleDrawerOpen = () => {
+    // console.warn('Opening drawer');
+    setDrawerOpen(true)
+  }
   const [createSnackbarOpen, setCreateSnackbarOpen] = useState(false)
 
   const closeCreateSnackbar = (event) => setCreateSnackbarOpen(false)
@@ -421,6 +444,83 @@ function App() {
     }
   }
 
+  const openedMixin = (theme) => ({
+    width: drawerWidth,
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    overflowX: 'hidden',
+  });
+
+  const closedMixin = (theme) => {
+    console.warn('closedMixin');
+
+    return ({
+      transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+      }),
+      overflowX: 'hidden',
+      width: `calc(${theme.spacing(7)} + 1px)`,
+      [theme.breakpoints.up('sm')]: {
+        width: `calc(${theme.spacing(8)} + 1px)`,
+      },
+    })
+  };
+
+  const shouldForwardPropsForDrawer = (prop) => {
+    return !['open', 'drawerOpen'].includes(prop)
+  }
+
+  const AppBar = styled(MuiAppBar, {
+    shouldForwardProp: shouldForwardPropsForDrawer
+  })(({ theme, open }) => ({
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    ...(open && {
+      marginLeft: drawerWidth,
+      width: `calc(100% - ${drawerWidth}px)`,
+      transition: theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+    }),
+  }));
+
+
+  const Drawer = styled(MuiDrawer, {
+    shouldForwardProp: shouldForwardPropsForDrawer
+  })(
+    ({ theme, open }) => ({
+      width: drawerWidth,
+      flexShrink: 0,
+      whiteSpace: 'nowrap',
+      boxSizing: 'border-box',
+      ...(open && {
+        ...openedMixin(theme),
+        '& .MuiDrawer-paper': openedMixin(theme),
+      }),
+      ...(!open && {
+        ...closedMixin(theme),
+        '& .MuiDrawer-paper': closedMixin(theme),
+      }),
+    }),
+  );
+
+  const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+  }));
+
+  const theme = useTheme();
   return (
 
     <div className="App">
@@ -434,74 +534,115 @@ function App() {
           Property created
         </Alert>
       </Snackbar>
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
+      <Box sx={{ flexGrow: 1, display: 'flex' }}>
+        <Drawer variant="permanent" open={drawerOpen}>
+          <DrawerHeader>
+            <IconButton onClick={handleDrawerClose}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </DrawerHeader>
+          <Divider />
+
+          <List>
+            {[
+              { text: 'Add Home', icon: <AddIcon /> },
+              { text: 'Manage Homes', icon: <ViewListIcon /> }
+            ].map(listItem => (
+              <ListItem disablePadding sx={{ display: 'block' }}>
+                <ListItemButton
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: drawerOpen ? 'initial' : 'center',
+                    px: 2.5,
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: drawerOpen ? 3 : 'auto',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {listItem.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={listItem.text} sx={{ opacity: drawerOpen ? 1 : 0 }} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+        <Container maxWidth="md">
+
+          <DrawerHeader />
+          <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box' }}>
+            <Stepper nonLinear activeStep={activeStep} orientation="vertical">
+              {steps.map((step, index) => (
+                <Step
+                  key={step}
+                  completed={completed[step]}>
+                  {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
+                  <StepButton color="inherit" onClick={handleStep(steps.indexOf(step))}>
+                    {step}
+                  </StepButton>
+                  <StepContent>
+                    {getStepContent(steps.indexOf(step))}
+
+                    <div>
+                      <Button
+                        variant="contained"
+                        onClick={index === steps.length - 1 ? handleCreateProperty : handleNext}
+                        sx={{ mt: 1, mr: 1 }}
+                        startIcon={index === steps.length - 1 && <AddCircleIcon />}
+                      >
+                        {index === steps.length - 1 ? 'Create Property' : 'Continue'}
+                      </Button>
+                      <Button
+                        disabled={index === 0}
+                        onClick={handleBack}
+                        sx={{ mt: 1, mr: 1 }}
+                      >
+                        Back
+                      </Button>
+                    </div>
+                  </StepContent>
+                </Step>
+              ))}
+            </Stepper>
+
+            {
+              properties.map((property, index) => (
+                <div key={property.id ? property.id : index} >
+                  <p >{property.address}</p>
+                </div>
+              ))
+            }
+
+
+          </Box>
+
+        </Container>
+        <AppBar position="fixed" open={drawerOpen}>
           <Toolbar>
             <IconButton
-              size="large"
               edge="start"
               color="inherit"
               aria-label="menu"
-              sx={{ mr: 2 }}
+              sx={{
+                marginRight: 5,
+                ...(drawerOpen && { display: 'none' }),
+              }}
+              onClick={handleDrawerOpen}
             >
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Add a Property
             </Typography>
-            { owner.name }
+            {owner.name}
             {/* <Button color="inherit">Login</Button> */}
           </Toolbar>
         </AppBar>
       </Box>
-
-      <Container maxWidth="md">
-
-
-        <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box' }}>
-          <Stepper nonLinear activeStep={activeStep} orientation="vertical">
-            {steps.map((step, index) => (
-              <Step
-                key={step}
-                completed={completed[step]}>
-                {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
-                <StepButton color="inherit" onClick={handleStep(steps.indexOf(step))}>
-                  {step}
-                </StepButton>
-                <StepContent>
-                  {getStepContent(steps.indexOf(step))}
-
-                  <div>
-                    <Button
-                      variant="contained"
-                      onClick={index === steps.length - 1 ? handleCreateProperty : handleNext}
-                      sx={{ mt: 1, mr: 1 }}
-                      startIcon={index === steps.length - 1 && <AddCircleIcon />}
-                    >
-                      {index === steps.length - 1 ? 'Create Property' : 'Continue'}
-                    </Button>
-                    <Button
-                      disabled={index === 0}
-                      onClick={handleBack}
-                      sx={{ mt: 1, mr: 1 }}
-                    >
-                      Back
-                    </Button>
-                  </div>
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-        </Box>
-
-      </Container>
-      {
-        properties.map((property, index) => (
-          <div key={property.id ? property.id : index} >
-            <p >{property.address}</p>
-          </div>
-        ))
-      }
 
     </div >
   );
