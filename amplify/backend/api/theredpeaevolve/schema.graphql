@@ -53,7 +53,7 @@ type Property @model {
   """
   > I want to be able to add specific and multiple amenties to my property (eg: parking, hot tub, Wifi etc.)
   """
-  features: [Feature!] @hasMany
+  features: [Feature!]! @hasMany
 
   # Could eventually do @hasMany
   # And could do many-to-many via joining Model 

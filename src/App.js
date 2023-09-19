@@ -5,7 +5,7 @@ import './App.css';
 // https://stackoverflow.com/a/43596713/1175496
 // https://stackoverflow.com/a/59268871/1175496
 import { createOwner, createProperty, createFeature, createRoom } from './graphql/mutations.ts'
-import { listProperties, listOwners } from './graphql/queries.ts'
+import { listProperties, listOwners, getProperty } from './graphql/queries.ts'
 import { GraphQLResult } from "@aws-amplify/api/lib/types"
 
 
@@ -14,20 +14,23 @@ import awsExports from './aws-exports'
 import Button from '@mui/material/Button';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
+// import StepLabel from '@mui/material/StepLabel';
 import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
 import StepButton from '@mui/material/StepButton';
 import StepContent from '@mui/material/StepContent';
 import Box from '@mui/material/Box';
 // import { spacing } from '@mui/system';
-
-
-import AppBar from '@mui/material/AppBar';
+// import AppBar from '@mui/material/AppBar';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import CheckIcon from '@mui/icons-material/Check';
 
 import Radio from '@mui/material/Radio';
 import Checkbox from '@mui/material/Checkbox';
@@ -56,6 +59,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import InputLabel from '@mui/material/InputLabel';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import BedIcon from '@mui/icons-material/Bed';
+import ShowerICon from '@mui/icons-material/Shower';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -64,6 +70,10 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import { PropertyType, FeatureType, RoomType } from './API.ts';
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
+
+import { DataGrid } from '@mui/x-data-grid';
+// import { getProperty } from './graphql/queries';
+
 // import { styled, createTheme, ThemeProvider } from '@mui/system';
 
 Amplify.configure(awsExports)
@@ -82,10 +92,87 @@ const initialPropertyState = {
 
 let roomId = 1;
 
+// const drawerZ
+const drawerWidth = 240;
+
+const openedMixin = (theme) => ({
+  width: drawerWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+});
+
+const closedMixin = (theme) => {
+  // console.warn('closedMixin');
+
+  return ({
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    overflowX: 'hidden',
+    width: `calc(${theme.spacing(7)} + 1px)`,
+    [theme.breakpoints.up('sm')]: {
+      width: `calc(${theme.spacing(8)} + 1px)`,
+    },
+  })
+};
+
+const shouldForwardPropsForDrawer = (prop) => {
+  return !['open', 'drawerOpen'].includes(prop)
+}
+
+const AppBar = styled(MuiAppBar, {
+  shouldForwardProp: shouldForwardPropsForDrawer
+})(({ theme, open }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(['width', 'margin'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: shouldForwardPropsForDrawer
+})(
+  ({ theme, open }) => ({
+    width: drawerWidth,
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    boxSizing: 'border-box',
+    ...(open && {
+      ...openedMixin(theme),
+      '& .MuiDrawer-paper': openedMixin(theme),
+    }),
+    ...(!open && {
+      ...closedMixin(theme),
+      '& .MuiDrawer-paper': closedMixin(theme),
+    }),
+  }),
+);
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  padding: theme.spacing(0, 1),
+  // necessary for content to be below app bar
+  ...theme.mixins.toolbar,
+}));
+
 function App() {
 
-  // const drawerZ
-  const drawerWidth = 240;
 
   const ADD_HOME = 'Add Home'
   const MANAGE_HOMES = 'Manage Homes'
@@ -103,8 +190,44 @@ function App() {
   // alert(propertyFormState.address);
   // https://stackoverflow.com/a/39672914/1175496
   // const [properties, setProperties]: [Property[], Function] = useState([])
-  const [properties, setProperties] = useState([])
+  const propertyColumns = [
+    { field: 'type', headerName: 'Type', width: 70 },
+    { field: 'address', headerName: 'Address', width: 130 },
+    {
+      field: 'owner',
+      valueGetter: (params) => {
+        // https://mui.com/x/react-data-grid/column-definition/
+        // if (!params.value) {
+        //   return params.value;
+        // }
+        // return (((params || {}).row || {}).owner ||{}).name;
+        return ((params || {}).value || {}).name;
+      }, headerName: 'Owner', width: 130
+    },
+    // {
+    //   field: 'bedroomCount',
+    //   headerName: 'Bedrooms',
+    //   type: 'number'
+    // }
+  ]
+  const [propertyRows, setPropertyRows] = useState([])
   const [owner, setOwner] = useState({})
+
+  const [selectedProperty, setSelectedProperty] = useState({});
+
+  const onPropertyRowSelectionChange = async (rowSelectionModel, details) => {
+    // https://mui.com/x/api/data-grid/data-grid/#DataGrid-prop-onRowSelectionModelChange
+    // console.warn('rowSelectionModel', rowSelectionModel)
+
+    try {
+
+      const selectedPropertyData = await API.graphql(graphqlOperation(getProperty, { id: rowSelectionModel[0] }))
+      // console.warn('selectedProperty', selectedProperty)
+      setSelectedProperty(selectedPropertyData.data.getProperty);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   useEffect(() => {
     fetchProperties()
@@ -162,12 +285,21 @@ function App() {
     setOwner(owner)
   }
 
+
   async function fetchProperties() {
     try {
       // const propertyData: GraphQLResult<any> = await API.graphql(graphqlOperation(listProperties))
       const propertyData = await API.graphql(graphqlOperation(listProperties))
-      const properties = propertyData.data.listProperties.items
-      setProperties(properties)
+      const propertyRows = propertyData.data.listProperties.items.map(property => {
+        return {
+          ...property,
+          // Need a different query; listProperties doesnt eagerly get all the rooms 
+          // bedroomCount: (property.rooms.items || []).filter(_ => _.type === RoomType.BEDROOM).length,
+          // bathroomCount: (property.rooms.items || []).filter(_ => _.type === RoomType.BATHROOM).length,
+        }
+      })
+      // console.warn(propertyRows);
+      setPropertyRows(propertyRows)
     } catch (e) {
       console.error('error fetching properties')
       console.error(e)
@@ -336,14 +468,78 @@ function App() {
         </Stepper>)
       case MANAGE_HOMES:
         return (<>
-          {
-            properties.map((property, index) => (
-              <div key={property.id ? property.id : index} >
-                <p >{property.address}</p>
-              </div>
-            ))
-          }
+          <DataGrid
+            onRowSelectionModelChange={onPropertyRowSelectionChange}
+            rows={propertyRows}
+            columns={propertyColumns}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 5 },
+              },
+            }}
+            pageSizeOptions={[5, 10]}
+          />
+          {selectedProperty.id && <Card sx={{ mt: 1, width: 1 }}>
+            <CardContent>
+
+              <Stack direction="row">
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                    {selectedProperty.id}
+                  </Typography>
+                  <Typography variant="h5" component="div">
+                    {selectedProperty.address}
+                  </Typography>
+                  <Typography sx={{ mb: 1.5 }} color="text.secondary">
+                    {selectedProperty.type}
+                  </Typography>
+                  <Typography variant="body2">
+                    {selectedProperty.description}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  {/* <Typography color="text.secondary" sx={{ display: 'flex', mb: 2 }} gutterBottom>
+                    <Avatar sx={{ mr: 1 }}>
+                      {selectedProperty.owner.name.split(' ').filter((_, i) => i <= 1).map(_ => _[0]).join('')}
+                    </Avatar>
+                    {selectedProperty.owner.name}
+                  </Typography> */}
+                  <Stack direction="row">
+                    <Typography variant="h5" component="div" sx={{ display: 'flex', mb: 2, mr: 2 }}>
+                      <Avatar sx={{ mr: 1 }}>
+                        <BedIcon />
+                      </Avatar>
+                      {((selectedProperty.rooms || []).items || []).filter(room => room.type === RoomType.BEDROOM).length} Bdr
+                    </Typography>
+                    <Typography variant="h5" component="div" sx={{ display: 'flex', mb: 2, mr: 2 }}>
+                      <Avatar sx={{ mr: 1 }}>
+                        <ShowerICon />
+                      </Avatar>
+                      {((selectedProperty.rooms || []).items || []).filter(room => room.type === RoomType.BATHROOM).length} Bth
+                    </Typography>
+                  </Stack>
+                  <List dense>
+                    {((selectedProperty.features || {}).items || []).map(feature => {
+
+                      return (
+                        <ListItem key={feature.type}>
+                          <ListItemIcon>
+                            <CheckIcon />
+                          </ListItemIcon>
+                          <ListItemText primary={feature.type} />
+                        </ListItem>)
+                    })}
+                  </List>
+                </Box>
+              </Stack>
+            </CardContent>
+            <CardActions>
+              <Button disabled size="small" startIcon={<EditIcon />}>Edit</Button>
+            </CardActions>
+          </Card>}
+
         </>)
+      // checkboxSelection
     }
   }
   // https://stackoverflow.com/a/48991708/1175496
@@ -507,82 +703,6 @@ function App() {
         return 'Unknown step';
     }
   }
-
-  const openedMixin = (theme) => ({
-    width: drawerWidth,
-    transition: theme.transitions.create('width', {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    overflowX: 'hidden',
-  });
-
-  const closedMixin = (theme) => {
-    console.warn('closedMixin');
-
-    return ({
-      transition: theme.transitions.create('width', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
-      overflowX: 'hidden',
-      width: `calc(${theme.spacing(7)} + 1px)`,
-      [theme.breakpoints.up('sm')]: {
-        width: `calc(${theme.spacing(8)} + 1px)`,
-      },
-    })
-  };
-
-  const shouldForwardPropsForDrawer = (prop) => {
-    return !['open', 'drawerOpen'].includes(prop)
-  }
-
-  const AppBar = styled(MuiAppBar, {
-    shouldForwardProp: shouldForwardPropsForDrawer
-  })(({ theme, open }) => ({
-    zIndex: theme.zIndex.drawer + 1,
-    transition: theme.transitions.create(['width', 'margin'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-    ...(open && {
-      marginLeft: drawerWidth,
-      width: `calc(100% - ${drawerWidth}px)`,
-      transition: theme.transitions.create(['width', 'margin'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-    }),
-  }));
-
-
-  const Drawer = styled(MuiDrawer, {
-    shouldForwardProp: shouldForwardPropsForDrawer
-  })(
-    ({ theme, open }) => ({
-      width: drawerWidth,
-      flexShrink: 0,
-      whiteSpace: 'nowrap',
-      boxSizing: 'border-box',
-      ...(open && {
-        ...openedMixin(theme),
-        '& .MuiDrawer-paper': openedMixin(theme),
-      }),
-      ...(!open && {
-        ...closedMixin(theme),
-        '& .MuiDrawer-paper': closedMixin(theme),
-      }),
-    }),
-  );
-
-  const DrawerHeader = styled('div')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-  }));
 
   const theme = useTheme();
   return (

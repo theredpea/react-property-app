@@ -141,7 +141,7 @@ export type Feature = {
   id: string,
   createdAt: string,
   updatedAt: string,
-  propertyFeaturesId?: string | null,
+  propertyFeaturesId: string,
 };
 
 export enum FeatureType {
@@ -246,7 +246,7 @@ export type CreateFeatureInput = {
   type: FeatureType,
   description?: string | null,
   id?: string | null,
-  propertyFeaturesId?: string | null,
+  propertyFeaturesId: string,
 };
 
 export type ModelFeatureConditionInput = {
@@ -396,7 +396,7 @@ export type CreatePropertyMutation = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -454,7 +454,7 @@ export type UpdatePropertyMutation = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -512,7 +512,7 @@ export type DeletePropertyMutation = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -696,7 +696,7 @@ export type CreateFeatureMutation = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -713,7 +713,7 @@ export type UpdateFeatureMutation = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -730,7 +730,7 @@ export type DeleteFeatureMutation = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -767,7 +767,7 @@ export type GetPropertyQuery = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -939,7 +939,7 @@ export type GetFeatureQuery = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -959,7 +959,7 @@ export type ListFeaturesQuery = {
       id: string,
       createdAt: string,
       updatedAt: string,
-      propertyFeaturesId?: string | null,
+      propertyFeaturesId: string,
     } | null >,
     nextToken?: string | null,
   } | null,
@@ -998,7 +998,7 @@ export type OnCreatePropertySubscription = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -1055,7 +1055,7 @@ export type OnUpdatePropertySubscription = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -1112,7 +1112,7 @@ export type OnDeletePropertySubscription = {
         id: string,
         createdAt: string,
         updatedAt: string,
-        propertyFeaturesId?: string | null,
+        propertyFeaturesId: string,
       } | null >,
       nextToken?: string | null,
     } | null,
@@ -1289,7 +1289,7 @@ export type OnCreateFeatureSubscription = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -1305,7 +1305,7 @@ export type OnUpdateFeatureSubscription = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
 
@@ -1321,6 +1321,6 @@ export type OnDeleteFeatureSubscription = {
     id: string,
     createdAt: string,
     updatedAt: string,
-    propertyFeaturesId?: string | null,
+    propertyFeaturesId: string,
   } | null,
 };
