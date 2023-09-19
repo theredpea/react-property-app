@@ -87,7 +87,10 @@ function App() {
   // const drawerZ
   const drawerWidth = 240;
 
-  const [drawerOpen, setDrawerOpen] = useState(true)
+  const ADD_HOME = 'Add Home'
+  const MANAGE_HOMES = 'Manage Homes'
+  const [drawerItem, setDrawerItem] = useState(ADD_HOME)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const handleDrawerClose = () => setDrawerOpen(false)
   const handleDrawerOpen = () => {
     // console.warn('Opening drawer');
@@ -292,7 +295,57 @@ function App() {
 
 
 
+  const getDrawerContent = (drawerItem) => {
 
+    switch (drawerItem) {
+      case ADD_HOME:
+
+        return (<Stepper nonLinear activeStep={activeStep} orientation="vertical">
+          {steps.map((step, index) => (
+            <Step
+              key={step}
+              completed={completed[step]}>
+              {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
+              <StepButton color="inherit" onClick={handleStep(steps.indexOf(step))}>
+                {step}
+              </StepButton>
+              <StepContent>
+                {getStepContent(steps.indexOf(step))}
+
+                <div>
+                  <Button
+                    variant="contained"
+                    disabled={index === (steps.length - 1) && propertyFormState.rooms.length === 0}
+                    onClick={index === steps.length - 1 ? handleCreateProperty : handleNext}
+                    sx={{ mt: 1, mr: 1 }}
+                    startIcon={index === steps.length - 1 && <AddCircleIcon />}
+                  >
+                    {index === steps.length - 1 ? 'Create Property' : 'Continue'}
+                  </Button>
+                  <Button
+                    disabled={index === 0}
+                    onClick={handleBack}
+                    sx={{ mt: 1, mr: 1 }}
+                  >
+                    Back
+                  </Button>
+                </div>
+              </StepContent>
+            </Step>
+          ))}
+        </Stepper>)
+      case MANAGE_HOMES:
+        return (<>
+          {
+            properties.map((property, index) => (
+              <div key={property.id ? property.id : index} >
+                <p >{property.address}</p>
+              </div>
+            ))
+          }
+        </>)
+    }
+  }
   // https://stackoverflow.com/a/48991708/1175496
   const getStepContent = (step) => {
     const formControlStyle = { display: 'block', mb: 2 };
@@ -393,7 +446,10 @@ function App() {
         return (
           <React.Fragment>
             {propertyFormState.rooms.map(room => (
-              <Stack direction="row" key={room.id} spacing={1} sx={{ mb: 2 }}>
+              <Stack direction="row"
+                key={room.id}
+                spacing={1}
+                sx={{ mb: 2 }}>
                 <FormControl sx={{ ...formControlStyle, minWidth: '100px' }} >
                   <InputLabel id="roomType-label-label">Type</InputLabel>
                   <Select
@@ -427,7 +483,15 @@ function App() {
             ))
             }<Stack
               direction="row"
-              justifyContent="flex-end">
+              sx={propertyFormState.rooms.length === 0 ? {
+                justifyContent: ' center',
+                padding: '2em',
+                backgroundColor: ' #f7f7f7',
+                border: '2px dashed grey',
+                mb: ' 10px',
+              } : {
+                justifyContent: 'flex-end'
+              }}>
               {/* display: 'block', */}
               <Button
                 variant="contained"
@@ -545,10 +609,10 @@ function App() {
 
           <List>
             {[
-              { text: 'Add Home', icon: <AddIcon /> },
-              { text: 'Manage Homes', icon: <ViewListIcon /> }
+              { text: ADD_HOME, icon: <AddIcon /> },
+              { text: MANAGE_HOMES, icon: <ViewListIcon /> }
             ].map(listItem => (
-              <ListItem disablePadding sx={{ display: 'block' }}>
+              <ListItem key={listItem.text} disablePadding sx={{ display: 'block' }} onClick={() => setDrawerItem(listItem.text)}>
                 <ListItemButton
                   sx={{
                     minHeight: 48,
@@ -575,48 +639,8 @@ function App() {
 
           <DrawerHeader />
           <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box' }}>
-            <Stepper nonLinear activeStep={activeStep} orientation="vertical">
-              {steps.map((step, index) => (
-                <Step
-                  key={step}
-                  completed={completed[step]}>
-                  {/* The use of the StepButton here demonstrates clickable step labels, as well as setting the completed flag. However because steps can be accessed in a non-linear fashion, it's up to your own implementation to determine when all steps are completed (or even if they need to be completed). */}
-                  <StepButton color="inherit" onClick={handleStep(steps.indexOf(step))}>
-                    {step}
-                  </StepButton>
-                  <StepContent>
-                    {getStepContent(steps.indexOf(step))}
 
-                    <div>
-                      <Button
-                        variant="contained"
-                        onClick={index === steps.length - 1 ? handleCreateProperty : handleNext}
-                        sx={{ mt: 1, mr: 1 }}
-                        startIcon={index === steps.length - 1 && <AddCircleIcon />}
-                      >
-                        {index === steps.length - 1 ? 'Create Property' : 'Continue'}
-                      </Button>
-                      <Button
-                        disabled={index === 0}
-                        onClick={handleBack}
-                        sx={{ mt: 1, mr: 1 }}
-                      >
-                        Back
-                      </Button>
-                    </div>
-                  </StepContent>
-                </Step>
-              ))}
-            </Stepper>
-
-            {
-              properties.map((property, index) => (
-                <div key={property.id ? property.id : index} >
-                  <p >{property.address}</p>
-                </div>
-              ))
-            }
-
+            {getDrawerContent(drawerItem)}
 
           </Box>
 
@@ -636,7 +660,7 @@ function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Add a Property
+              {drawerItem}
             </Typography>
             {owner.name}
             {/* <Button color="inherit">Login</Button> */}
@@ -647,9 +671,5 @@ function App() {
     </div >
   );
 }
-
-const styles = {
-}
-
 
 export default App;
