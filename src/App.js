@@ -61,7 +61,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import BedIcon from '@mui/icons-material/Bed';
-import ShowerICon from '@mui/icons-material/Shower';
+import ShowerIcon from '@mui/icons-material/Shower';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -513,7 +513,7 @@ function App() {
                     </Typography>
                     <Typography variant="h5" component="div" sx={{ display: 'flex', mb: 2, mr: 2 }}>
                       <Avatar sx={{ mr: 1 }}>
-                        <ShowerICon />
+                        <ShowerIcon />
                       </Avatar>
                       {((selectedProperty.rooms || []).items || []).filter(room => room.type === RoomType.BATHROOM).length} Bth
                     </Typography>
